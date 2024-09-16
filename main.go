@@ -9,9 +9,13 @@ import (
 
 func main() {
 	database.Init()
+
 	r := gin.Default()
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
+	// r.POST("/chatrooms", controllers.CreateChatroom)
+	// r.GET("/chatrooms", controllers.GetChatrooms)
+	// r.GET("/chatrooms/:id", controllers.GetMessages)
 
 	// protected := r.Group("/api")
 	// protected.Use(middleware.AuthMiddleware())
