@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"net/http"
+	"real-time-chat/internal/database"
 	"real-time-chat/internal/models"
-	"real-time-chat/internal/server/database"
 
 	"github.com/gin-gonic/gin"
 )
