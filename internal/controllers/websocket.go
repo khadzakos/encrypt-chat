@@ -15,25 +15,25 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func HandleConnections(w http.ResponseWriter, r *http.Request) {
+func (room *ChatRoom) HandleConnection(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade error:", err)
 		return
 	}
-	defer ws.Close()
+
+	room.AddClient(ws)
+	defer func() {
+		room.RemoveClient(ws)
+		ws.Close()
+	}()
 
 	for {
-		messageType, message, err := ws.ReadMessage()
+		_, msg, err := ws.ReadMessage()
 		if err != nil {
-			log.Println(err)
+			log.Println("Error while reading message:", err)
 			break
 		}
-		log.Printf("Received: %s", message)
-
-		if err := ws.WriteMessage(messageType, message); err != nil {
-			log.Println(err)
-			break
-		}
+		room.broadcast <- msg
 	}
 }
