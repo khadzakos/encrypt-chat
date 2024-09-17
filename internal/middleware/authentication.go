@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"net/http"
+	"real-time-chat/internal/database"
 	"real-time-chat/internal/models"
-	"real-time-chat/internal/server/database"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"

@@ -33,7 +33,11 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if database.GetDB().Create(&user).Error != nil {
+	var newUser models.User
+	newUser.Username = user.Username
+	newUser.Password = user.Password
+
+	if database.GetDB().Create(&newUser).Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}

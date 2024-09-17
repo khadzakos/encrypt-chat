@@ -40,6 +40,9 @@ func Init() {
 }
 
 func GetDB() *gorm.DB {
+	if User_DB == nil {
+		log.Fatal("Database is not connected")
+	}
 	return User_DB
 }
 

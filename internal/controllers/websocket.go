@@ -23,10 +23,7 @@ func (room *ChatRoom) HandleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	room.AddClient(ws)
-	defer func() {
-		room.RemoveClient(ws)
-		ws.Close()
-	}()
+	defer room.RemoveClient(ws)
 
 	for {
 		_, msg, err := ws.ReadMessage()
