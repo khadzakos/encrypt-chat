@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 	"real-time-chat/internal/database"
 	"real-time-chat/internal/models"
 	"time"
@@ -11,16 +12,30 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GenerateJWT(user models.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": user.ID,
-		"exp":      jwt.TimeFunc().Add(time.Hour * 24).Unix(),
-	})
-	tokenString, err := token.SignedString([]byte("secret"))
+var jwtSecret = os.Getenv("JWT_SECRET")
+
+type Claims struct {
+	UserID uint `json:"user_id"`
+	jwt.StandardClaims
+}
+
+func GenerateJWT(userID uint) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour) // Token expires in 24 hours
+	claims := &Claims{
+		UserID: userID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	// Create the token with the claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret
+	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", err
 	}
-
 	return tokenString, nil
 }
 
@@ -54,7 +69,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateJWT(dbUser)
+	token, err := GenerateJWT(dbUser.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

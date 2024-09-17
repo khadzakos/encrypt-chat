@@ -2,55 +2,52 @@ package middleware
 
 import (
 	"net/http"
-	"real-time-chat/internal/database"
-	"real-time-chat/internal/models"
+	"os"
+	"real-time-chat/internal/controllers"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+var jwtSecret = os.Getenv("JWT_SECRET")
+
+// JWTAuthMiddleware checks if the user is authenticated via JWT
+func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
+		// Get the Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.NewValidationError("invalid signing method", jwt.ValidationErrorSignatureInvalid)
-			}
-			return []byte("your-secret-key"), nil
+		// Extract the token from the Authorization header (format: "Bearer <token>")
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
+			c.Abort()
+			return
+		}
+
+		// Parse and validate the token
+		claims := &controllers.Claims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		// Get the user ID from token claims
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
-		}
+		// Store the userID in the context so it can be accessed later
+		c.Set("userID", claims.UserID)
 
-		userID := uint(claims["user_id"].(float64))
-
-		// Find the user in the database
-		var user models.User
-		if err := database.GetDB().Where("id = ?", userID).First(&user).Error; err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-			c.Abort()
-			return
-		}
-
-		// Attach the user to the request context
-		c.Set("user", user)
+		// Proceed to the next handler
 		c.Next()
 	}
 }

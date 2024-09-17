@@ -27,7 +27,7 @@ func main() {
 	// r.GET("/chatrooms", controllers.GetChatrooms)
 	// r.GET("/chatrooms/:id", controllers.GetMessages)
 
-	r.GET("/ws", middleware.AuthMiddleware(), func(c *gin.Context) {
+	r.GET("/ws", middleware.JWTAuthMiddleware(), func(c *gin.Context) {
 		chatRoom.HandleConnection(c.Writer, c.Request)
 	})
 
