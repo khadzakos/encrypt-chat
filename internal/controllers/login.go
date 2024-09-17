@@ -48,7 +48,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	err := user.CheckPassword(user.Password)
+	err := dbUser.CheckPassword(user.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid password"})
 		return

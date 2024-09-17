@@ -13,6 +13,6 @@ func (u *UserRegister) HashPassword(password string) error {
 	return nil
 }
 
-func (u *UserLogin) CheckPassword(providedPassword string) error {
-	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(providedPassword))
+func (u *User) CheckPassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 }
