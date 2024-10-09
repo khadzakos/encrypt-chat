@@ -3,5 +3,5 @@
 #TODO 
 - add Redis for chat history
 - add encryption
-- add docker
+- docker
 - (maybe) add front
